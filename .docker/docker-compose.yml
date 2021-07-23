@@ -1,0 +1,59 @@
+version: "3.8"
+services:
+
+    mysql:
+      image: mysql:8.0
+      container_name: yourdomain-mysql
+      working_dir: /application
+      entrypoint: ""
+      command: bash -c "chown -R mysql:mysql /var/log/mysql && exec /entrypoint.sh mysqld"
+      volumes:
+        - ..:/application
+        - yourdomain-db:/var/lib/mysql
+        - ./mysql/conf.d/yourdomain.cnf:/etc/mysql/conf.d/yourdomain.cnf
+        - ./mysql/log:/var/log/mysql
+      environment:
+        - MYSQL_ROOT_PASSWORD=password
+        - MYSQL_DATABASE=yourdomain
+        - MYSQL_USER=yourdomain
+        - MYSQL_PASSWORD=password
+      ports:
+        - 3306:3306
+      networks:
+        - yourdomain-network
+      restart: always
+
+    nginx:
+      image: nginx:1.21
+      container_name: yourdomain-nginx
+      working_dir: /application
+      volumes:
+          - ..:/application
+          - ./nginx/conf.d/yourdomain.conf:/etc/nginx/conf.d/yourdomain.conf
+          - ./nginx/log:/var/log/nginx
+      depends_on:
+        - php-fpm
+      ports:
+       - 80:80
+      networks:
+        - yourdomain-network
+      restart: always
+
+    php-fpm:
+      build: php-fpm
+      container_name: yourdomain-php-fpm
+      working_dir: /application
+      volumes:
+        - ..:/application
+        - ./php-fpm/log:/var/log/php
+        - ./php-fpm/conf.d/yourdomain.ini:/usr/local/etc/php/conf.d/yourdomain.ini
+      networks:
+        - yourdomain-network
+      restart: always
+
+networks:
+  yourdomain-network:
+    driver: bridge
+
+volumes:
+  yourdomain-db:

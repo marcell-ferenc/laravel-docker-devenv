@@ -41,12 +41,19 @@ services:
 
     php-fpm:
       build: php-fpm
+      extra_hosts:
+          - "host.docker.internal:host-gateway"
+      environment:
+          - XDEBUG_MODE: ${XDEBUG_MODE}
       container_name: yourdomain-php-fpm
       working_dir: /application
       volumes:
         - ..:/application
         - ./php-fpm/log:/var/log/php
-        - ./php-fpm/conf.d/yourdomain.ini:/usr/local/etc/php/conf.d/yourdomain.ini
+        - ./php-fpm/xdebug:/tmp/docker-xdebug
+        - ./php-fpm/conf.d/errors.ini:/usr/local/etc/php/conf.d/errors.ini
+        - ./php-fpm/conf.d/timezone.ini:/usr/local/etc/php/conf.d/timezone.ini
+        - ./php-fpm/conf.d/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
       networks:
         - yourdomain-network
       restart: always
